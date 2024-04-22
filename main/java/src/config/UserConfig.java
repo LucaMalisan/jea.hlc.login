@@ -3,16 +3,16 @@ package src.config;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import src.model.User;
+import src.model.UserPJO;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 public class UserConfig implements UserDetails {
-    private User user;
+    private UserPJO user;
 
-    public UserConfig(User user) {
+    public UserConfig(UserPJO user) {
         this.user = user;
     }
 
@@ -38,7 +38,7 @@ public class UserConfig implements UserDetails {
 
     @Override
     public String getUsername() {
-        return String.format("%s-%s", user.getName().toLowerCase(), user.getFirstName().toLowerCase());
+        return user.getEmail();
     }
 
     @Override
