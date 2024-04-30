@@ -7,6 +7,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.web.DefaultRedirectStrategy;
 import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
@@ -30,7 +31,9 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
                 .map(Cookie::getValue)
                 .findFirst()
                 .orElseThrow(NullPointerException::new);
-        response.addCookie(new Cookie("authorization", "test")); //TODO use OAUTH Token
+        CsrfToken csrfToken = (CsrfToken) request.getAttribute(CsrfToken.class.getName());
+        Cookie cookie = new Cookie("csrf", csrfToken.getToken());
+        response.addCookie(cookie);
         redirectStrategy.sendRedirect(request, response, targetUrl);
     }
 }
