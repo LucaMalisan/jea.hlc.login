@@ -46,7 +46,7 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
                 .map(Cookie::getValue)
                 .findFirst()
                 .orElseThrow(NullPointerException::new);
-        String authorizationStr = this.createAuthorizationDTO(request, authentication).toString().replace(",", "%2C");
+        String authorizationStr = this.createAuthorizationDTO(request, authentication).toString();
         response.addCookie(new Cookie("authorization", URLEncoder.encode(authorizationStr, StandardCharsets.UTF_8)));
         redirectStrategy.sendRedirect(request, response, targetUrl);
     }
@@ -60,9 +60,6 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
 
     public AuthorizationDTO createAuthorizationDTO(HttpServletRequest request, Authentication authentication) {
         return AuthorizationDTO.builder()
-                .userName(authentication.getName())
-                .userManager(authentication.getAuthorities().contains(new SimpleGrantedAuthority("user_manager")))
-                .admin(authentication.getAuthorities().contains(new SimpleGrantedAuthority("admin")))
                 .csrf(((CsrfToken) request.getAttribute(CsrfToken.class.getName())).getToken())
                 .jwt(this.token(authentication)).build();
     }

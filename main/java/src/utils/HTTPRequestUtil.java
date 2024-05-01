@@ -19,6 +19,8 @@ public class HTTPRequestUtil {
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod(method);
         con.setRequestProperty("Content-Type", "application/json");
+
+        //TODO on application start register at authorization server
         con.setRequestProperty("authorization", "test");
         con.setConnectTimeout(5000);
         con.setReadTimeout(5000);
