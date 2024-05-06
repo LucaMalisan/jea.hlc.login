@@ -5,8 +5,10 @@ import lombok.extern.java.Log;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.util.Base64;
 
 @Log
 public class HTTPRequestUtil {
@@ -14,29 +16,42 @@ public class HTTPRequestUtil {
     private HTTPRequestUtil() {
     }
 
-    public static String httpRequest(String urlStr, String method) throws IOException {
+    public static String httpRequest(String urlStr, String method, String authorization, String data) throws IOException {
+
+        String base64AuthorizationHeader = "Basic " + Base64.getEncoder().encodeToString(authorization.getBytes());
+
         URL url = new URL(urlStr);
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
-        con.setRequestMethod(method);
-        con.setRequestProperty("Content-Type", "application/json");
 
-        //TODO on application start register at authorization server
-        con.setRequestProperty("authorization", "test");
+        //header
+        con.setRequestMethod(method);
+        con.setRequestProperty("Authorization", base64AuthorizationHeader);
+
+        //payload
+        con.setDoOutput(true);
+        OutputStream os = con.getOutputStream();
+        os.write(data.getBytes());
+        os.flush();
+        os.close();
+
+        //open connection
         con.setConnectTimeout(5000);
         con.setReadTimeout(5000);
 
-        if (con.getResponseCode() < 300) {
-            try (BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));) {
-                String inputLine;
-                StringBuilder content = new StringBuilder();
-                while ((inputLine = in.readLine()) != null) {
-                    content.append(inputLine);
-                }
-                con.disconnect();
-                return content.toString();
+        //    if (con.getResponseCode() < 300) {
+        try (BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));) {
+            String inputLine;
+            StringBuilder content = new StringBuilder();
+            while ((inputLine = in.readLine()) != null) {
+                content.append(inputLine);
             }
+            con.disconnect();
+
+            if (con.getResponseCode() >= 300) {
+                log.severe("Getting JWT token failed with message: " + con.getResponseMessage());
+            }
+
+            return content.toString();
         }
-        con.disconnect();
-        return null;
     }
 }
