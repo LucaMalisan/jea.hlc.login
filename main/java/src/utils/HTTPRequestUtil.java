@@ -1,5 +1,7 @@
 package src.utils;
 
+import ch.qos.logback.core.util.StringCollectionUtil;
+import io.micrometer.common.util.StringUtils;
 import lombok.extern.java.Log;
 
 import java.io.BufferedReader;
@@ -28,11 +30,13 @@ public class HTTPRequestUtil {
         con.setRequestProperty("Authorization", base64AuthorizationHeader);
 
         //payload
-        con.setDoOutput(true);
-        OutputStream os = con.getOutputStream();
-        os.write(data.getBytes());
-        os.flush();
-        os.close();
+        if (!StringUtils.isEmpty(data)) {
+            con.setDoOutput(true);
+            OutputStream os = con.getOutputStream();
+            os.write(data.getBytes());
+            os.flush();
+            os.close();
+        }
 
         //open connection
         con.setConnectTimeout(5000);
