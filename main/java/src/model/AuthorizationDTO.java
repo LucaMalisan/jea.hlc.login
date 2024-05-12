@@ -1,15 +1,19 @@
 package src.model;
 
+import cookies.AuthorizationCookieFields;
+import cookies.CookieUtils;
 import lombok.Builder;
-import lombok.ToString;
+import lombok.Getter;
 
 @Builder
+@Getter
 public class AuthorizationDTO {
-    public String csrf;
-    public String jwt;
+    private String csrf;
+    private String jwt;
 
     @Override
     public String toString() {
-        return "csrf:'" + csrf + ", jwt:'" + jwt;
+        return CookieUtils.authorizationCookieFormat(AuthorizationCookieFields.CSRF, csrf) +
+                CookieUtils.authorizationCookieFormat(AuthorizationCookieFields.JWT, jwt);
     }
 }

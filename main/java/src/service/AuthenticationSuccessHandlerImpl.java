@@ -1,5 +1,7 @@
 package src.service;
 
+import cookies.CookieNames;
+import cookies.CookieUtils;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,18 +19,15 @@ import src.model.AuthorizationDTO;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
 
 @Component
 @Log
 public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHandler {
 
     private RedirectStrategy redirectStrategy;
-    private final JwtEncoder encoder;
     private final TokenService tokenService;
 
     public AuthenticationSuccessHandlerImpl(JwtEncoder encoder) {
-        this.encoder = encoder;
         this.tokenService = new TokenService(encoder);
         this.redirectStrategy = new DefaultRedirectStrategy();
     }
@@ -41,21 +40,20 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
     }
 
     protected void handle(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
-        String targetUrl = Arrays.stream(request.getCookies())
-                .filter(e -> e.getName().equals("callback"))
-                .map(Cookie::getValue)
-                .findFirst()
-                .orElseThrow(NullPointerException::new);
+        Cookie targetUrlCookie = CookieUtils.getCookieByNameOrNull(request, CookieNames.CALLBACK);
+
+        if (targetUrlCookie == null) {
+            throw new RuntimeException();
+        }
+
+        String targetUrl = targetUrlCookie.getValue();
         String authorizationStr = this.createAuthorizationDTO(request, authentication).toString();
-        response.addCookie(new Cookie("authorization", URLEncoder.encode(authorizationStr, StandardCharsets.UTF_8)));
+        response.addCookie(new Cookie(CookieNames.AUTHORIZATION_COOKIE, URLEncoder.encode(authorizationStr, StandardCharsets.UTF_8)));
         redirectStrategy.sendRedirect(request, response, targetUrl);
     }
 
     public String token(Authentication authentication) {
-        log.info("Token requested for user: " + authentication.getName());
-        String token = this.tokenService.generateToken(authentication);
-        log.info("Token granted: " + token);
-        return token;
+        return this.tokenService.generateToken(authentication);
     }
 
     public AuthorizationDTO createAuthorizationDTO(HttpServletRequest request, Authentication authentication) {

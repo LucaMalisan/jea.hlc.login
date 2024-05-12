@@ -1,5 +1,6 @@
 package src.config;
 
+import jwt.JwtUserScopes;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,11 +22,11 @@ public class UserConfig implements UserDetails {
         List<GrantedAuthority> authorities = new ArrayList<>();
 
         if (user.isAdmin()) {
-            authorities.add(new SimpleGrantedAuthority("admin"));
+            authorities.add(new SimpleGrantedAuthority(JwtUserScopes.ADMIN));
         } else if (user.isUserManager()) {
-            authorities.add(new SimpleGrantedAuthority("user_manager"));
+            authorities.add(new SimpleGrantedAuthority(JwtUserScopes.USER_MANAGER));
         } else {
-            authorities.add(new SimpleGrantedAuthority("warehouse_manager"));
+            authorities.add(new SimpleGrantedAuthority(JwtUserScopes.WAREHOUSE_MANAGER));
         }
 
         return authorities;
