@@ -1,21 +1,16 @@
 package src.service;
 
 import io.micrometer.common.util.StringUtils;
-import jakarta.json.Json;
-import jakarta.json.JsonObject;
-import jakarta.json.JsonReader;
-import jakarta.json.JsonValue;
+import jakarta.json.*;
+import json.JsonUtil;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import request.HttpRequestUtil;
 import src.config.UserConfig;
 import src.model.UserPJO;
-import src.utils.HTTPRequestUtil;
-
-import java.io.IOException;
-import java.io.StringReader;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
@@ -41,25 +36,21 @@ public class UserDetailsServiceImpl implements UserDetailsService {
             accessToken = this.getAccessToken();
         }
 
-        String content;
-        try {
-            content = HTTPRequestUtil.httpRequest("http://192.168.56.1:8082/user/rest/all", "GET", accessToken, "");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        String content = HttpRequestUtil.createHttpRequestAndGetResponse(
+                "http://192.168.56.1:8082/user/rest/all", "GET", accessToken, "");
 
-        JsonReader reader = Json.createReader(new StringReader(content));
-        JsonObject jsonObject = reader.readObject();
-        JsonObject embedded = jsonObject.getJsonObject("_embedded");
+        JsonArray useList = JsonUtil.getJsonArray("userList", content);
         UserPJO user = null;
 
-        for (JsonValue obj : embedded.getJsonArray("userList")) {
-            if (this.jsonValueToString(obj, "email").equals(email)) {
+        //TODO make string constants somewhere
+
+        for (JsonValue obj : useList) {
+            if (JsonUtil.jsonValueToString(obj, "email").equals(email)) {
                 user = new UserPJO();
-                user.setEmail(this.jsonValueToString(obj, "email"));
-                user.setPasswordHash(this.jsonValueToString(obj, "passwordHash"));
-                user.setUserManager(Boolean.parseBoolean(this.jsonValueToString(obj, "userManager")));
-                user.setAdmin(Boolean.parseBoolean(this.jsonValueToString(obj, "admin")));
+                user.setEmail(JsonUtil.jsonValueToString(obj, "email"));
+                user.setPasswordHash(JsonUtil.jsonValueToString(obj, "passwordHash"));
+                user.setUserManager(Boolean.parseBoolean(JsonUtil.jsonValueToString(obj, "userManager")));
+                user.setAdmin(Boolean.parseBoolean(JsonUtil.jsonValueToString(obj, "admin")));
             }
         }
 
@@ -69,26 +60,17 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         return new UserConfig(user);
     }
 
-    private String jsonValueToString(JsonValue value, String property) {
-        return value.asJsonObject().get(property).toString().replace("\"", "");
-    }
-
     private String getAccessToken() {
         String authorization = String.join(":", clientId, clientSecret);
-        StringBuilder data = new StringBuilder();
         String dataFormat = "%s=%s&";
 
-        data.append(String.format(dataFormat, "grant_type", "client_credentials"))
-                .append(String.format(dataFormat, "redirect_uri", "urn:ietf:wg:oauth:2.0:oob"))
-                .append(String.format(dataFormat, "audience", audience));
+        //it is ok that these values aren't defined in a constant, because this calls OAuth.
+        //We have no influence on whether OAuth changes these properties anyway.
 
-        String jwt;
-        try {
-            jwt = HTTPRequestUtil.httpRequest(oauthUrl, "POST", authorization, data.toString());
-        } catch (Exception e) {
-            throw new InternalError("Failed to get a bearer token");
-        }
+        String data = String.format(dataFormat, "grant_type", "client_credentials") +
+                String.format(dataFormat, "redirect_uri", "urn:ietf:wg:oauth:2.0:oob") +
+                String.format(dataFormat, "audience", audience);
 
-        return jwt;
+        return HttpRequestUtil.createHttpRequestAndGetResponse(oauthUrl, "POST", authorization, data);
     }
 }
