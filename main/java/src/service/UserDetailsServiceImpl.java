@@ -39,7 +39,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         String content = HttpRequestUtil.createHttpRequestAndGetResponse(
                 "http://192.168.56.1:8082/user/rest/all", "GET", accessToken, "");
 
-        JsonArray useList = JsonUtil.getJsonArray("userList", content);
+        JsonArray useList = JsonUtil.getJsonArray(content, "userList");
         UserPJO user = null;
 
         //TODO make string constants somewhere
