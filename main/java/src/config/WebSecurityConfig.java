@@ -22,6 +22,8 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.csrf.CsrfTokenRequestAttributeHandler;
+import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import src.handler.ParameterInterceptor;
 import src.service.AuthenticationSuccessHandlerImpl;
 
 @Configuration
@@ -47,6 +49,7 @@ public class WebSecurityConfig {
                         .loginProcessingUrl("/login")
                         .successHandler(myAuthenticationSuccessHandler())
                 )
+                .exceptionHandling(e -> e.defaultAuthenticationEntryPointFor(parameterInterceptor(), new AntPathRequestMatcher("/*")))
                 .csrf((csrf) -> csrf.csrfTokenRequestHandler(requestHandler))
                 .oauth2ResourceServer(oauth -> oauth.jwt(Customizer.withDefaults()))
                 .logout(LogoutConfigurer::permitAll);
@@ -73,5 +76,9 @@ public class WebSecurityConfig {
         JWK jwk = new RSAKey.Builder(rsaKeys.publicKey()).privateKey(rsaKeys.privateKey()).build();
         JWKSource<SecurityContext> jwks = new ImmutableJWKSet<>(new JWKSet(jwk));
         return new NimbusJwtEncoder(jwks);
+    }
+
+    public ParameterInterceptor parameterInterceptor() {
+        return new ParameterInterceptor("/login");
     }
 }
