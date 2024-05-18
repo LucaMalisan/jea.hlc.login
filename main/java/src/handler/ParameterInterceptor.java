@@ -24,10 +24,10 @@ public class ParameterInterceptor extends LoginUrlAuthenticationEntryPoint {
 
         Cookie previouslySavedCookie = CookieUtils.getCookieByNameOrNull(request, CookieNames.CALLBACK);
 
-        if (previouslySavedCookie != null) {
+        if (previouslySavedCookie != null && !previouslySavedCookie.getValue().isEmpty()) {
             response.addCookie(new Cookie(CookieNames.CALLBACK, previouslySavedCookie.getValue()));
         } else {
-            String redirect = request.getParameter("redirect");
+            String redirect = request.getParameter(CookieNames.CALLBACK);
             response.addCookie(new Cookie(CookieNames.CALLBACK, redirect));
         }
 
