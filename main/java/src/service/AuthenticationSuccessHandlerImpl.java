@@ -63,13 +63,14 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
 
         String targetUrl = targetUrlCookie.getValue();
         String authorizationStr = this.createAuthorizationDTO(request, authentication).toString();
-        response.addCookie(new Cookie(CookieNames.AUTHORIZATION_COOKIE, URLEncoder.encode(authorizationStr, StandardCharsets.UTF_8)));
+        //   response.addCookie(new Cookie(CookieNames.AUTHORIZATION_COOKIE, URLEncoder.encode(authorizationStr, StandardCharsets.UTF_8)));
 
-        String test = HttpRequestUtil.createHttpRequestAndGetResponse(
+        HttpRequestUtil.createHttpRequestAndGetResponse(
                 targetUrl + "/rest/user-authenticated",
                 "POST", this.getAccessToken(), URLEncoder.encode(authorizationStr, StandardCharsets.UTF_8));
 
         targetUrlCookie.setMaxAge(0);
+        response.addCookie(targetUrlCookie);
         response.sendRedirect(targetUrl);
     }
 
