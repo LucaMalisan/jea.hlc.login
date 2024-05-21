@@ -88,6 +88,10 @@
             <version>1.4</version>
             <scope>compile</scope>
         </dependency>
+        <dependency>
+            <groupId>jakarta.servlet</groupId>
+            <artifactId>jakarta.servlet-api</artifactId>
+        </dependency>
     </dependencies>
     <build>
         <plugins>

@@ -62,19 +62,12 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
         String targetUrl = targetUrlCookie.getValue();
         String authorizationStr = this.createAuthorizationDTO(request, authentication).toString();
 
-        //Possibility 1 for modules that support using cookies (e.g. Spring)
         response.addCookie(new Cookie(CookieUtils.AUTHORIZATION_COOKIE, URLEncoder.encode(authorizationStr, StandardCharsets.UTF_8)));
-
-        //Possibility 2 for modules with bad cookie support (e.g. Jakarta EE)
-        HttpRequestUtil.createHttpRequestAndGetResponse(
-                JwtRestUtil.generateAuthRestURI(targetUrl),
-                "POST",
-                URLEncoder.encode(authorizationStr, StandardCharsets.UTF_8),
-                Map.of("id", id, HeaderFields.AUTHORIZATION, this.getAccessToken()));
 
         //remove target url cookie
         targetUrlCookie.setMaxAge(0);
         response.addCookie(targetUrlCookie);
+
         response.sendRedirect(targetUrl);
     }
 
