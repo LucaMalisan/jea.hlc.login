@@ -1,7 +1,7 @@
 package src.handler;
 
-import cookies.CookieNames;
 import cookies.CookieUtils;
+import header.AuthorizationHeaderUtils;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -22,13 +22,16 @@ public class ParameterInterceptor extends LoginUrlAuthenticationEntryPoint {
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authenticationException) throws IOException {
         RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
 
-        Cookie previouslySavedCookie = CookieUtils.getCookieByNameOrNull(request, CookieNames.CALLBACK);
+        Cookie previouslySavedCookie = CookieUtils.getCookieByNameOrNull(request, AuthorizationHeaderUtils.CALLBACK);
 
         if (previouslySavedCookie != null && !previouslySavedCookie.getValue().isEmpty()) {
-            response.addCookie(new Cookie(CookieNames.CALLBACK, previouslySavedCookie.getValue()));
+            response.addCookie(new Cookie(AuthorizationHeaderUtils.CALLBACK, previouslySavedCookie.getValue()));
         } else {
-            String redirect = request.getParameter(CookieNames.CALLBACK);
-            response.addCookie(new Cookie(CookieNames.CALLBACK, redirect));
+            String redirect = request.getParameter(AuthorizationHeaderUtils.CALLBACK);
+
+            if(redirect != null) {
+                response.addCookie(new Cookie(AuthorizationHeaderUtils.CALLBACK, redirect));
+            }
         }
 
         redirectStrategy.sendRedirect(request, response, "/login");

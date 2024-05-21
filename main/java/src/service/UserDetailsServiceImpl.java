@@ -8,9 +8,12 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import request.HeaderFields;
 import request.HttpRequestUtil;
 import src.config.UserConfig;
 import src.model.UserPJO;
+
+import java.util.Map;
 
 @Service
 public class UserDetailsServiceImpl implements UserDetailsService {
@@ -37,7 +40,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         }
 
         String content = HttpRequestUtil.createHttpRequestAndGetResponse(
-                "http://192.168.56.1:8082/user/rest/all", "GET", accessToken, "");
+                "http://192.168.56.1:8082/user/rest/all", "GET", "", Map.of(HeaderFields.AUTHORIZATION, accessToken));
 
         JsonArray useList = JsonUtil.getJsonArray(content, "userList");
         UserPJO user = null;
@@ -71,6 +74,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                 String.format(dataFormat, "redirect_uri", "urn:ietf:wg:oauth:2.0:oob") +
                 String.format(dataFormat, "audience", audience);
 
-        return HttpRequestUtil.createHttpRequestAndGetResponse(oauthUrl, "POST", authorization, data);
+        return HttpRequestUtil.createHttpRequestAndGetResponse(oauthUrl, "POST", data, Map.of(HeaderFields.AUTHORIZATION, authorization));
     }
 }

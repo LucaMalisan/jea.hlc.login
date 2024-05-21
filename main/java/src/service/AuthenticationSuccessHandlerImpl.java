@@ -1,33 +1,31 @@
 package src.service;
 
-import cookies.CookieNames;
 import cookies.CookieUtils;
+import header.AuthorizationHeaderUtils;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jwt.JwtRestUtil;
 import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
-import org.springframework.security.web.DefaultRedirectStrategy;
-import org.springframework.security.web.RedirectStrategy;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.stereotype.Component;
+import request.HeaderFields;
 import request.HttpRequestUtil;
 import src.model.AuthorizationDTO;
 
 import java.io.IOException;
 import java.net.URLEncoder;
-import java.net.http.HttpRequest;
 import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 @Component
 @Log
 public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHandler {
 
-    private RedirectStrategy redirectStrategy;
     private final TokenService tokenService;
 
     @Value("${security.oauth2.client.id}")
@@ -44,7 +42,6 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
 
     public AuthenticationSuccessHandlerImpl(JwtEncoder encoder) {
         this.tokenService = new TokenService(encoder);
-        this.redirectStrategy = new DefaultRedirectStrategy();
     }
 
     @Override
@@ -55,20 +52,27 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
     }
 
     protected void handle(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
-        Cookie targetUrlCookie = CookieUtils.getCookieByNameOrNull(request, CookieNames.CALLBACK);
+        Cookie targetUrlCookie = CookieUtils.getCookieByNameOrNull(request, AuthorizationHeaderUtils.CALLBACK);
 
         if (targetUrlCookie == null) {
             throw new RuntimeException();
         }
 
+        String id = JwtRestUtil.generateClientId(request);
         String targetUrl = targetUrlCookie.getValue();
         String authorizationStr = this.createAuthorizationDTO(request, authentication).toString();
-        //   response.addCookie(new Cookie(CookieNames.AUTHORIZATION_COOKIE, URLEncoder.encode(authorizationStr, StandardCharsets.UTF_8)));
 
+        //Possibility 1 for modules that support using cookies (e.g. Spring)
+        response.addCookie(new Cookie(CookieUtils.AUTHORIZATION_COOKIE, URLEncoder.encode(authorizationStr, StandardCharsets.UTF_8)));
+
+        //Possibility 2 for modules with bad cookie support (e.g. Jakarta EE)
         HttpRequestUtil.createHttpRequestAndGetResponse(
-                targetUrl + "/rest/user-authenticated",
-                "POST", this.getAccessToken(), URLEncoder.encode(authorizationStr, StandardCharsets.UTF_8));
+                JwtRestUtil.generateAuthRestURI(targetUrl),
+                "POST",
+                URLEncoder.encode(authorizationStr, StandardCharsets.UTF_8),
+                Map.of("id", id, HeaderFields.AUTHORIZATION, this.getAccessToken()));
 
+        //remove target url cookie
         targetUrlCookie.setMaxAge(0);
         response.addCookie(targetUrlCookie);
         response.sendRedirect(targetUrl);
@@ -95,7 +99,7 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
                 String.format(dataFormat, "redirect_uri", "urn:ietf:wg:oauth:2.0:oob") +
                 String.format(dataFormat, "audience", audience);
 
-        return HttpRequestUtil.createHttpRequestAndGetResponse(oauthUrl, "POST", authorization, data);
+        return HttpRequestUtil.createHttpRequestAndGetResponse(oauthUrl, "POST", data, Map.of(HeaderFields.AUTHORIZATION, authorization));
     }
 
 }
