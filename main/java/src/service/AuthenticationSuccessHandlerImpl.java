@@ -5,7 +5,6 @@ import header.AuthorizationHeaderUtils;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import jwt.JwtRestUtil;
 import lombok.extern.java.Log;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -58,11 +57,11 @@ public class AuthenticationSuccessHandlerImpl implements AuthenticationSuccessHa
             throw new RuntimeException();
         }
 
-        String id = JwtRestUtil.generateClientId(request);
         String targetUrl = targetUrlCookie.getValue();
         String authorizationStr = this.createAuthorizationDTO(request, authentication).toString();
-
-        response.addCookie(new Cookie(CookieUtils.AUTHORIZATION_COOKIE, URLEncoder.encode(authorizationStr, StandardCharsets.UTF_8)));
+        Cookie authorizationCookie = new Cookie(CookieUtils.AUTHORIZATION_COOKIE, URLEncoder.encode(authorizationStr, StandardCharsets.UTF_8));
+        authorizationCookie.setHttpOnly(true);
+        response.addCookie(authorizationCookie);
 
         //remove target url cookie
         targetUrlCookie.setMaxAge(0);
