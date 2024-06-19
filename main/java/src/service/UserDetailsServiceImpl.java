@@ -13,6 +13,7 @@ import request.HttpRequestUtil;
 import src.config.UserConfig;
 import src.model.UserPJO;
 
+import java.io.StringReader;
 import java.util.Map;
 
 @Service
@@ -40,14 +41,15 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         }
 
         String content = HttpRequestUtil.createHttpRequestAndGetResponse(
-                "http://localhost:8082/user/rest/all", "GET", "", Map.of(HeaderFields.AUTHORIZATION, accessToken));
+                "http://localhost:8080/user/rest/all", "GET", "", Map.of(HeaderFields.AUTHORIZATION, accessToken));
 
-        JsonArray useList = JsonUtil.getJsonArray(content, "userList");
+        JsonReader reader = Json.createReader(new StringReader(content));
+        JsonArray userList = reader.readArray();
         UserPJO user = null;
 
         //TODO make string constants somewhere
 
-        for (JsonValue obj : useList) {
+        for (JsonValue obj : userList) {
             if (JsonUtil.jsonValueToString(obj, "email").equals(email)) {
                 user = new UserPJO();
                 user.setEmail(JsonUtil.jsonValueToString(obj, "email"));
