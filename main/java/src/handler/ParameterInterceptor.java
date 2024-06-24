@@ -1,6 +1,5 @@
 package src.handler;
 
-import cookies.CookieUtils;
 import header.AuthorizationHeaderUtils;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
