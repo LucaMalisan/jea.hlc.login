@@ -21,8 +21,6 @@ public class ParameterInterceptor extends LoginUrlAuthenticationEntryPoint {
         super(loginFormUrl);
     }
 
-    //TODO here lays the dog buried
-
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authenticationException) throws IOException {
         String redirect = request.getParameter(AuthorizationHeaderUtils.CALLBACK);
@@ -30,7 +28,7 @@ public class ParameterInterceptor extends LoginUrlAuthenticationEntryPoint {
         if (redirect != null) {
             response.addCookie(new Cookie(AuthorizationHeaderUtils.CALLBACK, redirect));
             response.addHeader("Set-Cookie", String.format("%s=%s", AuthorizationHeaderUtils.CALLBACK, redirect));
-            response.sendRedirect("http://localhost:8084/login");
+            response.sendRedirect("http://localhost:8084/auth/login");
         }
     }
 }
