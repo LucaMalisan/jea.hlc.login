@@ -41,7 +41,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         }
 
         String content = HttpRequestUtil.createHttpRequestAndGetResponse(
-                "http://localhost:8080/user/rest/all", "GET", "", Map.of(HeaderFields.AUTHORIZATION, accessToken));
+                "http://localhost:8082/user/rest/all", "GET", "", Map.of(HeaderFields.AUTHORIZATION, accessToken));
 
         JsonReader reader = Json.createReader(new StringReader(content));
         JsonArray userList = reader.readArray();
