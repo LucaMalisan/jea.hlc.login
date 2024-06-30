@@ -21,18 +21,6 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
     private static String accessToken;
 
-    @Value("${security.oauth2.client.id}")
-    private String clientId;
-
-    @Value("${security.oauth2.client.secret}")
-    private String clientSecret;
-
-    @Value("${security.oauth2.audience}")
-    private String audience;
-
-    @Value("${security.oauth2.url}")
-    private String oauthUrl;
-
     @Override
     public UserDetails loadUserByUsername(String email) {
 
@@ -41,7 +29,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
         }
 
         String content = HttpRequestUtil.createHttpRequestAndGetResponse(
-                "http://localhost:8082/user/rest/all", "GET", "", Map.of(HeaderFields.AUTHORIZATION, accessToken));
+                "http://host.docker.internal:8082/user/rest/all", "GET", "", Map.of(HeaderFields.AUTHORIZATION, accessToken));
 
         JsonReader reader = Json.createReader(new StringReader(content));
         JsonArray userList = reader.readArray();
@@ -66,7 +54,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     }
 
     private String getAccessToken() {
-        String authorization = String.join(":", clientId, clientSecret);
+        String authorization = String.join(":", System.getenv("CLIENT_ID"), System.getenv("CLIENT_SECRET"));
         String dataFormat = "%s=%s&";
 
         //it is ok that these values aren't defined in a constant, because this calls OAuth.
@@ -74,8 +62,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 
         String data = String.format(dataFormat, "grant_type", "client_credentials") +
                 String.format(dataFormat, "redirect_uri", "urn:ietf:wg:oauth:2.0:oob") +
-                String.format(dataFormat, "audience", audience);
+                String.format(dataFormat, "audience", System.getenv("AUDIENCE"));
 
-        return HttpRequestUtil.createHttpRequestAndGetResponse(oauthUrl, "POST", data, Map.of(HeaderFields.AUTHORIZATION, authorization));
+        return HttpRequestUtil.createHttpRequestAndGetResponse(System.getenv("OAUTH_URL"), "POST", data, Map.of(HeaderFields.AUTHORIZATION, authorization));
     }
 }
