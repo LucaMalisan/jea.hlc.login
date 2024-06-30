@@ -85,7 +85,8 @@
         <dependency>
             <groupId>jea</groupId>
             <artifactId>mvn.auth</artifactId>
-            <version>1.8</version>
+            <version>1.9</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>jea</groupId>
