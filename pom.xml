@@ -3,13 +3,12 @@
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>jea-hlc-login</groupId>
-    <artifactId>jea-hlc-login</artifactId>
+    <groupId>jea.hlc</groupId>
+    <artifactId>login</artifactId>
+    <version>1.0</version>
     <packaging>war</packaging>
-    <properties>
-        <!-- The main class to start by executing java -jar -->
-        <start-class>main.java.src.LoginApplication</start-class>
-    </properties>
+    <name>login</name>
+    <description>jea.hlc.login</description>
     <repositories>
         <repository>
             <id>auth</id>
@@ -86,12 +85,13 @@
         <dependency>
             <groupId>jea</groupId>
             <artifactId>mvn.auth</artifactId>
-            <version>1.6</version>
+            <version>1.9</version>
+            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>jea</groupId>
             <artifactId>mvn.request</artifactId>
-            <version>1.5</version>
+            <version>1.6</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
